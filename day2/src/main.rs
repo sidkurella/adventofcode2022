@@ -51,6 +51,23 @@ impl Throw {
         }
     }
 
+    fn parse_as_outcome(s: &str, opponent: Throw) -> Option<Throw> {
+        match s {
+            "X" => match opponent {
+                Throw::Rock => Some(Throw::Scissors),
+                Throw::Paper => Some(Throw::Rock),
+                Throw::Scissors => Some(Throw::Paper),
+            },
+            "Y" => Some(opponent),
+            "Z" => match opponent {
+                Throw::Rock => Some(Throw::Paper),
+                Throw::Paper => Some(Throw::Scissors),
+                Throw::Scissors => Some(Throw::Rock),
+            },
+            _ => None,
+        }
+    }
+
     fn score_round(self, opponent: Throw) -> usize {
         let outcome = match (self, opponent) {
             (Throw::Rock, Throw::Rock)
@@ -78,7 +95,7 @@ fn main() {
         let mine = parts.next().unwrap();
 
         let opponent_throw = Throw::parse_opponent(opponent).unwrap();
-        let my_throw = Throw::parse_self(mine).unwrap();
+        let my_throw = Throw::parse_as_outcome(mine, opponent_throw).unwrap();
 
         score += my_throw.score_round(opponent_throw);
     }
