@@ -70,9 +70,13 @@ fn main() {
         let start = raw_start - 1;
         let end = raw_end - 1;
 
+        let mut crates = Vec::new();
         for _ in 0..n {
             let c = stacks[start].pop_front().unwrap();
-            stacks[end].push_front(c);
+            crates.push(c);
+        }
+        for c in crates.iter().rev() {
+            stacks[end].push_front(*c);
         }
 
         let l = iter.next();
