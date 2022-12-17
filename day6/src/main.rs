@@ -2,7 +2,7 @@ use std::collections::HashSet;
 use std::hash::Hash;
 use std::io::stdin;
 
-const WINDOW_SIZE: usize = 4;
+const WINDOW_SIZE: usize = 14;
 
 fn is_distinct<T: Eq + Hash>(s: &[T]) -> bool {
     let mut set = HashSet::new();
@@ -16,7 +16,7 @@ fn is_distinct<T: Eq + Hash>(s: &[T]) -> bool {
 }
 
 fn main() {
-    let mut chars: usize = 4;
+    let mut chars: usize = WINDOW_SIZE;
     for line in stdin().lines() {
         let raw_line = line.unwrap();
         let l = raw_line.trim();
