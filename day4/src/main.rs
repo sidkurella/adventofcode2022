@@ -1,3 +1,4 @@
+use std::cmp::{max, min};
 use std::io::stdin;
 
 #[derive(Copy, Clone, Debug)]
@@ -13,6 +14,14 @@ impl Range {
 
     fn is_contained(self, other: Range) -> bool {
         other.lower >= self.lower && other.upper <= self.upper
+    }
+
+    fn disjoint(self, other: Range) -> bool {
+        max(self.lower, other.lower) > min(self.upper, other.upper)
+    }
+
+    fn overlaps(self, other: Range) -> bool {
+        !self.disjoint(other)
     }
 
     fn contains(self, other: Range) -> bool {
@@ -40,7 +49,7 @@ fn main() {
             second_bounds.next().unwrap().parse().unwrap(),
         );
 
-        if first_range.contains(second_range) || second_range.contains(first_range) {
+        if first_range.overlaps(second_range) {
             contained_pairs += 1;
         }
     }
