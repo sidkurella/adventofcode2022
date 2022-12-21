@@ -1,4 +1,6 @@
-use std::{collections::HashMap, io::stdin, rc::Rc};
+use std::cell::RefCell;
+use std::rc::Rc;
+use std::{collections::HashMap, io::stdin};
 
 const SIZE_THRESHOLD: usize = 100000;
 
@@ -20,7 +22,7 @@ impl File {
 #[derive(Clone, Debug)]
 struct Dir {
     name: String,
-    sub_dirs: HashMap<String, Dir>,
+    sub_dirs: HashMap<String, Rc<RefCell<Dir>>>,
     files: HashMap<String, File>,
 }
 
@@ -36,7 +38,7 @@ impl Dir {
     fn size(&self) -> usize {
         let mut ret = 0;
         for (_, v) in self.sub_dirs.iter() {
-            ret += v.size();
+            ret += v.borrow().size();
         }
         for (_, v) in self.files.iter() {
             ret += v.size;
@@ -45,17 +47,23 @@ impl Dir {
         return ret;
     }
 
-    fn with_subdir(&mut self, dir: String) -> &mut Dir {
-        self.sub_dirs
+    fn with_subdir(&mut self, dir: String) -> Rc<RefCell<Dir>> {
+        let cell = self
+            .sub_dirs
             .entry(dir.clone())
-            .or_insert_with(|| Dir::new(dir))
+            .or_insert_with(|| Rc::new(RefCell::new(Dir::new(dir))));
+        cell.clone()
+    }
+
+    fn add_file(&mut self, file: File) {
+        self.files.insert(file.name.clone(), file);
     }
 }
 
 fn main() {
-    let mut root = Dir::new(String::from("/"));
-    let mut trail: Vec<&mut Dir> = Vec::new();
-    let mut cur_dir = &mut root;
+    let root = Rc::new(RefCell::new(Dir::new(String::from("/"))));
+    let mut trail: Vec<Rc<RefCell<Dir>>> = Vec::new();
+    let mut cur_dir = root.clone();
 
     let lines: Vec<String> = stdin().lines().map(|x| x.unwrap()).collect();
 
@@ -63,9 +71,7 @@ fn main() {
     let mut line = iter.next();
     while line.is_some() {
         let cmd = line.unwrap().trim().strip_prefix("$").unwrap().trim();
-        let cd_cmd = cmd.strip_prefix("cd ");
-        if cd_cmd.is_some() {
-            let dir_name = cd_cmd.unwrap().trim();
+        if let Some(dir_name) = cmd.strip_prefix("cd ") {
             cur_dir = match dir_name {
                 ".." => match trail.pop() {
                     Some(d) => d,
@@ -73,11 +79,11 @@ fn main() {
                 },
                 "/" => {
                     trail.clear();
-                    &mut root
+                    root.clone()
                 }
                 _ => {
-                    trail.push(cur_dir);
-                    cur_dir.with_subdir(dir_name.to_string())
+                    trail.push(cur_dir.clone());
+                    cur_dir.borrow_mut().with_subdir(dir_name.to_string())
                 }
             }
         }
